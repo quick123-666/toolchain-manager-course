@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Manager Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+    h1 { text-align: center; padding: 24px; font-size: 1.4rem; color: #f8fafc; }
+    .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; padding: 0 24px 24px; max-width: 1200px; margin: 0 auto; }
+    .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+    .card h2 { font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .project-item { padding: 10px 0; border-bottom: 1px solid #334155; }
+    .project-item:last-child { border-bottom: none; }
+    .project-name { font-weight: 600; color: #f8fafc; }
+    .project-phase { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+    .health-bar { height: 8px; background: #334155; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+    .health-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+    .health-ok { background: #22c55e; }
+    .health-warn { background: #eab308; }
+    .health-bad { background: #ef4444; }
+    .score { font-size: 1.8rem; font-weight: 700; }
+    .timeline-item { padding: 8px 0; font-size: 0.82rem; border-bottom: 1px solid #1e293b; }
+    .timeline-item:last-child { border-bottom: none; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-right: 4px; }
+    .badge-p1 { background: #7c3aed22; color: #a78bfa; border: 1px solid #7c3aed44; }
+    .badge-p2 { background: #ca8a0422; color: #fbbf24; border: 1px solid #ca8a0444; }
+    .badge-p3 { background: #1e40af22; color: #93c5fd; border: 1px solid #1e40af44; }
+    .api-status { text-align: center; font-size: 0.75rem; color: #64748b; margin-top: 12px; }
+    .api-status.error { color: #ef4444; }
+    .empty { color: #475569; font-size: 0.85rem; text-align: center; padding: 20px; }
+    input, button { padding: 8px 12px; border-radius: 6px; border: 1px solid #334155; background: #0f1117; color: #e2e8f0; font-size: 0.85rem; }
+    button { background: #3b82f6; border-color: #3b82f6; cursor: pointer; }
+    button:hover { background: #2563eb; }
+    .api-input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+    .api-input-group input { flex: 1; }
+  </style>
+</head>
+<body>
+  <h1>🔵 Project Manager Dashboard</h1>
+
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px 16px">
+    <div class="api-input-group">
+      <input id="apiKey" placeholder="X-Api-Key" value="pfb_admin_a3f8b2c1d9e4f7a6b8c3d2e1f9a8b7c6">
+      <button onclick="loadAll()">🔄 刷新</button>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <!-- Projects -->
+    <div class="card">
+      <h2>📁 Projects</h2>
+      <div id="projects">加载中...</div>
+    </div>
+
+    <!-- Health -->
+    <div class="card">
+      <h2>💚 Health</h2>
+      <div id="health">选择项目后显示</div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card">
+      <h2>📌 Timeline</h2>
+      <div id="timeline">选择项目后显示</div>
+    </div>
+  </div>
+
+  <div class="api-status" id="apiStatus">API 状态: 检测中...</div>
+
+  <script>
+    const BASE = "http://localhost:18901";
+    let currentPid = null;
+
+    function headers() {
+      return { "X-Api-Key": document.getElementById("apiKey").value };
+    }
+
+    function healthColor(score) {
+      if (score >= 70) return "health-ok";
+      if (score >= 40) return "health-warn";
+      return "health-bad";
+    }
+
+    function prioBadge(prio) {
+      return `<span class="badge badge-${prio.toLowerCase()}">${prio}</span>`;
+    }
+
+    async function loadProjects() {
+      try {
+        const res = await fetch(`${BASE}/projects`, { headers: headers() });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        if (!data.length) {
+          document.getElementById("projects").innerHTML = '<div class="empty">暂无项目</div>';
+          return;
+        }
+        document.getElementById("projects").innerHTML = data.map(p => `
+          <div class="project-item" onclick="selectProject('${p.id}')" style="cursor:pointer">
+            <div class="project-name">${p.name}</div>
+            <div class="project-phase">${p.phase} · ${p.created_at?.split("T")[0]}</div>
+          </div>
+        `).join("");
+      } catch (e) {
+        document.getElementById("projects").innerHTML = `<div class="empty">加载失败: ${e.message}</div>`;
+      }
+    }
+
+    async function selectProject(pid) {
+      currentPid = pid;
+      await Promise.all([loadHealth(pid), loadTimeline(pid)]);
+    }
+
+    async function loadHealth(pid) {
+      try {
+        const res = await fetch(`${BASE}/health/${pid}`, { headers: headers() });
+        if (!res.ok) throw new Error(res.status);
+        const d = await res.json();
+        const cls = healthColor(d.health_score);
+        document.getElementById("health").innerHTML = `
+          <div class="score ${cls}">${d.health_score}</div>
+          <div>task_done: ${d.task_done} / ${d.task_total}</div>
+          <div class="health-bar"><div class="health-fill ${cls}" style="width:${d.health_score}%"></div></div>
+        `;
+      } catch (e) {
+        document.getElementById("health").innerHTML = `<div class="empty">健康度加载失败: ${e.message}<br><small>s05 API 未启动?</small></div>`;
+      }
+    }
+
+    async function loadTimeline(pid) {
+      try {
+        const res = await fetch(`${BASE}/timeline/${pid}`, { headers: headers() });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        if (!data.length) {
+          document.getElementById("timeline").innerHTML = '<div class="empty">暂无时间线</div>';
+          return;
+        }
+        document.getElementById("timeline").innerHTML = data.slice(0,10).map(ev => `
+          <div class="timeline-item">
+            ${prioBadge(ev.priority)}
+            ${ev.title}
+            <div style="color:#475569;font-size:0.7rem">${ev.created_at?.replace("T"," ").split(".")[0]}</div>
+          </div>
+        `).join("");
+      } catch (e) {
+        document.getElementById("timeline").innerHTML = `<div class="empty">时间线加载失败: ${e.message}</div>`;
+      }
+    }
+
+    async function checkAPI() {
+      const el = document.getElementById("apiStatus");
+      try {
+        const res = await fetch(`${BASE}/projects`, { headers: headers() });
+        el.textContent = `API 状态: ✅ 连接正常 (${res.status})`;
+        el.className = "api-status";
+      } catch (e) {
+        el.textContent = `API 状态: ❌ 无法连接 (s05 FastAPI 未启动?)`;
+        el.className = "api-status error";
+      }
+    }
+
+    async function loadAll() {
+      await loadProjects();
+      if (currentPid) await selectProject(currentPid);
+      await checkAPI();
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>
