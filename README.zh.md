@@ -133,6 +133,16 @@ python package.py   # 生成 toolchain-manager-{date}.zip
 
 ---
 
+## 与相关项目的关系
+
+| 项目 | 关系 |
+|------|------|
+| [session-evolution-graph](https://github.com/quick123-666/session-evolution-graph) | 姊妹课：Session 演化图谱 ↔ 工具链管理，同一 Agent 教学体系 |
+| [GraphSpec / GraphForge](https://github.com/quick123-666/session-evolution-graph/blob/main/assets/GraphSpec-Paper.md) | 数据规范参考（项目生命周期 Phase 4.5 对齐） |
+| [Learn Claude Code](https://learn.shareai.run/en/) | 通用 Harness 教学法 |
+
+---
+
 ## 👤 作者
 
 📧 **[1539489228@qq.com](mailto:1539489228@qq.com)** · GitHub: **[@quick123-666](https://github.com/quick123-666)**

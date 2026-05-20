@@ -133,6 +133,16 @@ Includes all 6 chapters + bilingual docs + MIT License.
 
 ---
 
+## Related Projects
+
+| Project | Relationship |
+|---------|--------------|
+| [session-evolution-graph](https://github.com/quick123-666/session-evolution-graph) | Sister course: Session evolution graph ↔ Toolchain Manager, same Agent teaching track |
+| [GraphSpec / GraphForge](https://github.com/quick123-666/session-evolution-graph/blob/main/assets/GraphSpec-Paper.md) | Data spec reference (project lifecycle Phase 4.5 aligned) |
+| [Learn Claude Code](https://learn.shareai.run/en/) | General Harness pedagogy |
+
+---
+
 ## 👤 Author
 
 📧 **[1539489228@qq.com](mailto:1539489228@qq.com)** · GitHub: **[@quick123-666](https://github.com/quick123-666)**
