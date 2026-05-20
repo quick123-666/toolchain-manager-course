@@ -82,7 +82,7 @@ cd s06-vue-frontend && python api.py   # 启动后访问 http://localhost:18902
 - [x] s04 — 项目生命周期（GraphSpec Phase 4.5 对齐）
 - [x] s05 — FastAPI 层
 - [x] s06 — Vue 前端
-- [ ] **打包分发** — 一键打包为压缩包
+- [x] **打包分发** — `package.py` 一键 zip 打包
 
 ---
 
