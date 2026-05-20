@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.db
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Package output
+*.zip
+*.tar.gz
+
+# Node (如果有)
+node_modules/
+
+# IDE
+.vscode/
+.idea/
